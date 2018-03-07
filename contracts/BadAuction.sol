@@ -5,9 +5,6 @@ import "./AuctionInterface.sol";
 /** @title BadAuction */
 contract BadAuction is AuctionInterface {
 
-	address public highestBidder;
-	uint public highestBid;
-	address public beneficiary;
 
 	/* Bid function, vulnerable to reentrency attack.
 	 * Must return true on successful send and/or bid,
@@ -19,10 +16,19 @@ contract BadAuction is AuctionInterface {
 		// YOUR CODE HERE
 		// If the bid is not higher, send the
 		// money back.
-		require(msg.value > highestBid);
-		require(highestBidder.transfer(highestBid));
-		highestBidder = msg.sender;
-		highestBid = msg.value;
+		if(msg.value <= highestBid) {
+			require(msg.sender.send(msg.value));
+			return false;
+		} else {
+			if (highestBidder.send(highestBid)){
+				highestBidder = msg.sender;
+				highestBid = msg.value;
+				return true;
+			} else {
+				msg.sender.send(msg.value);
+				return false;
+			}
+		}
 	}
 
 
